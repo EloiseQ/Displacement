@@ -1,4 +1,4 @@
-## ----setup, echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----setup, echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------
 install.packages("tidycensus")   
 install.packages("tidyverse") 
 install.packages("sf")        
@@ -8,16 +8,16 @@ library(tidyverse)
 library(sf)
 
 
-## ----install tmap,echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----install tmap,echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------
 install.packages("tmap") 
 install.packages("viridis") 
 
 
-## ----load tmape, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----load tmape, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------
 library(tmap)
 library(viridis)
 
-## ----get data, echo=FALSE--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----get data, echo=FALSE--------------------------------------------------------------------------------------------------------------------------------------
 # API
 census_api_key("4a1ebc849fc0b8c6eb495412532ce5918841de8b", overwrite = TRUE)
 
@@ -92,7 +92,7 @@ la_acs_2022_wide <- la_acs_2022_wide %>%
   mutate(year = 2022)  
 
 
-## ----merge data, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----merge data, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------
 # merge
 la_acs_compare <- bind_rows(la_acs_2018_wide, la_acs_2022_wide)
 
@@ -104,7 +104,7 @@ la_acs_compare <- la_acs_compare %>%
   )
 
 
-## ----population by race data, echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------------------
+## ----population by race data, echo=FALSE-----------------------------------------------------------------------------------------------------------------------
 library(dplyr)
 library(ggplot2)
 
@@ -128,7 +128,7 @@ race_population_summary <- la_acs_lai_merged %>%
 # Print results
 print(race_population_summary)
 
-## ----covid vs income group data, echo=FALSE--------------------------------------------------------------------------------------------------------------------------------------------------
+## ----covid vs income group data, echo=FALSE--------------------------------------------------------------------------------------------------------------------
 library(dplyr)
 library(ggplot2)
 
@@ -159,7 +159,7 @@ income_population_summary <- la_acs_lai_merged %>%
 print(income_population_summary)
 
 
-## ----Total Population by Income Group (Pre vs. Post COVID-19), echo=FALSE--------------------------------------------------------------------------------------------------------------------
+## ----Total Population by Income Group (Pre vs. Post COVID-19), echo=FALSE--------------------------------------------------------------------------------------
 library(scales)  # For formatting numbers with commas
 
 # Ensure post-COVID period is correctly labeled
@@ -208,7 +208,7 @@ ggplot(income_population_summary, aes(x = income_group, y = total_population, fi
   scale_y_continuous(labels = scales::comma)   
 
 
-## ----Summary: Rent Burden Population & Rate by Income Group (Pre & Post COVID)*, echo=FALSE--------------------------------------------------------------------------------------------------
+## ----Summary: Rent Burden Population & Rate by Income Group (Pre & Post COVID)*, echo=FALSE--------------------------------------------------------------------
 # Ensure post-COVID period is correctly labeled
 la_acs_lai_merged <- la_acs_lai_merged %>%
   mutate(post = ifelse(year == 2022, "Post-COVID (2022)", "Pre-COVID (2018)"))
@@ -237,7 +237,7 @@ rent_burden_summary <- la_acs_lai_merged %>%
 # Print results
 print(rent_burden_summary)
 
-## ----plot: Rent Burden Population & Rate by Income Group (Pre & Post COVID)*, echo=FALSE-----------------------------------------------------------------------------------------------------
+## ----plot: Rent Burden Population & Rate by Income Group (Pre & Post COVID)*, echo=FALSE-----------------------------------------------------------------------
 # Plot rent burden rate by income group with pre vs. post COVID comparison
 ggplot(rent_burden_summary, aes(x = income_group, y = rent_burden_rate, fill = post)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
@@ -253,7 +253,7 @@ ggplot(rent_burden_summary, aes(x = income_group, y = rent_burden_rate, fill = p
         axis.text.x = element_text(angle = 45, hjust = 1))
 
 
-## ----summary:homeownership*, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----summary:homeownership*, echo=FALSE------------------------------------------------------------------------------------------------------------------------
 
 # Assign a dominant race group to each observation
 la_acs_lai_merged <- la_acs_lai_merged %>%
@@ -283,7 +283,7 @@ homeownership_summary <- la_acs_lai_merged %>%
 # Print results
 print(homeownership_summary)
 
-## ----plot:homeownership*, echo=FALSE---------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----plot:homeownership*, echo=FALSE---------------------------------------------------------------------------------------------------------------------------
 # Ensure the dataset is correctly structured and filter out any NA, NaN, or "Other"
 homeownership_summary <- homeownership_summary %>%
   filter(!is.na(homeownership_rate) & !is.nan(homeownership_rate) & race_group != "Other")
@@ -307,7 +307,7 @@ ggplot(homeownership_summary, aes(x = race_group, y = homeownership_rate, fill =
   )
 
 
-## ----la map file*, echo=FALSE----------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ----la map file*, echo=FALSE----------------------------------------------------------------------------------------------------------------------------------
 # Load libraries
 library(tigris)
 library(sf)
@@ -322,7 +322,7 @@ la_map_data$GEOID <- as.character(la_map_data$GEOID)
 head(la_map_data)
 
 
-## ----la map Homeownership in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE--------------------------------------------------------------------------------------------------------------
+## ----la map Homeownership in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE--------------------------------------------------------------------------------
 # Assign periods with explicit ordering
 la_acs_compare <- la_acs_compare %>%
   mutate(post = factor(ifelse(year == 2022, "Post-COVID (2018-2022)", "Pre-COVID (2013-2018)"),
@@ -354,7 +354,11 @@ ggplot(la_map_data) +
   )
 
 
-## ----la map Rent Burden in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------------------------------------------------
+## ----la map Rent Burden in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------------------
+library(dplyr)
+library(ggplot2)
+library(sf)
+
 # Assign periods with explicit ordering
 la_acs_compare <- la_acs_compare %>%
   mutate(post = factor(ifelse(year == 2022, "Post-COVID (2018-2022)", "Pre-COVID (2013-2018)"),
@@ -379,10 +383,14 @@ ggplot(la_map_data) +
     panel.grid = element_blank()
   )
 
-## ----la map Median Household Income in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------------------------------------
+## ----la map Median Household Income in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------
+library(dplyr)
+library(ggplot2)
+library(sf)
+
 # Assign periods with explicit ordering
 la_acs_compare <- la_acs_compare %>%
-  mutate(post = factor(ifelse(year == 2022, "Post-COVID (2018-2022)", "Pre-COVID (2014-2018)"),
+  mutate(post = factor(ifelse(year == 2022, "Post-COVID (2018-2022)", "Pre-COVID (2013-2018)"),
                        levels = c("Pre-COVID (2013-2018)", "Post-COVID (2018-2022)")))
 
 # Convert GEOID to character to match with spatial data
@@ -399,7 +407,7 @@ ggplot(la_map_data) +
   scale_fill_viridis_c(option = "plasma", na.value = "grey80", name = "Median Income ($)") +
   facet_wrap(~post, ncol = 2) +  # Left = Pre-COVID, Right = Post-COVID
   labs(
-    title = "Median Household Income in Los Angeles (2013-2018 vs. 2018-2022)",
+    title = "Median Household Income in Los Angeles (2014-2018 vs. 2018-2022)",
     subtitle = "Income disparities across census tracts before and after COVID-19",
     caption = "Data Source: ACS 2013-2018 & ACS 2018-2022"
   ) +
@@ -411,7 +419,7 @@ ggplot(la_map_data) +
   )
 
 
-## ----Box plot Income Variation Across Racial Groups (Pre vs. Post COVID-19)*, echo=FALSE-----------------------------------------------------------------------------------------------------
+## ----Box plot Income Variation Across Racial Groups (Pre vs. Post COVID-19)*, echo=FALSE-----------------------------------------------------------------------
 la_acs_long <- la_acs_compare %>%
   mutate(
     race_group = case_when(
@@ -439,7 +447,16 @@ ggplot(la_acs_long, aes(x = race_group, y = median_income, fill = post)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
 
-## ----Racial Composition Shift (Pre vs. Post COVID-19)*, echo=FALSE---------------------------------------------------------------------------------------------------------------------------
+## ----Racial Composition Shift (Pre vs. Post COVID-19)*, echo=FALSE---------------------------------------------------------------------------------------------
+# Compute total population explicitly
+la_acs_compare <- la_acs_compare %>%
+  mutate(total_population = white_pop + black_pop + latino_pop + asian_pop)
+
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
 # Compute total population explicitly
 la_acs_compare <- la_acs_compare %>%
   mutate(total_population = white_pop + black_pop + latino_pop + asian_pop)
@@ -465,7 +482,7 @@ race_summary <- la_acs_compare %>%
 # 🎨 Create a side-by-side bar chart
 ggplot(race_summary, aes(x = race_group, y = percentage, fill = period)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +  # Side-by-side bars
-  scale_fill_manual(values = c("Pre-COVID (2014-2018)" = "#1f78b4", "Post-COVID (2018-2022)" = "#e31a1c")) +
+  scale_fill_manual(values = c("Pre-COVID (2013-2018)" = "#1f78b4", "Post-COVID (2018-2022)" = "#e31a1c")) +
   geom_text(aes(label = paste0(round(percentage, 1), "%")), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 4) +  # Add percentage labels
   labs(
@@ -476,11 +493,10 @@ ggplot(race_summary, aes(x = race_group, y = percentage, fill = period)) +
   theme_minimal() +
   theme(legend.position = "top",
         text = element_text(size = 14),
-        axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+        axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability # Rotate x-axis labels for readability
 
 
-## ----OLS Regression: How income group affects rent burden during COVID*, echo=FALSE----------------------------------------------------------------------------------------------------------
-install.packages('fixest')
+## ----OLS Regression: How income group affects rent burden during COVID*, echo=FALSE----------------------------------------------------------------------------
 # Ensure racial composition is calculated separately for each year
 la_acs_compare <- la_acs_compare %>%
   group_by(year) %>%  
@@ -491,7 +507,8 @@ la_acs_compare <- la_acs_compare %>%
     latino_pct = (latino_pop / total_pop) * 100,
     asian_pct = (asian_pop / total_pop) * 100
   ) %>%
-  ungroup() 
+  ungroup()  # Remove grouping
+
 # Create income groups based on quantiles
 la_acs_compare <- la_acs_compare %>%
   mutate(
@@ -522,7 +539,7 @@ rent_burden_reg <- feols(
 summary(rent_burden_reg)
 
 
-## ----Run OLS Regression: Homeownership & Income Groups During COVID*, echo=FALSE-------------------------------------------------------------------------------------------------------------
+## ----Run OLS Regression: Homeownership & Income Groups During COVID*, echo=FALSE-------------------------------------------------------------------------------
 # Ensure income groups are categorized separately for each year
 la_acs_compare <- la_acs_compare %>%
   group_by(year) %>%  # Group by year to compute quantiles separately
@@ -562,7 +579,7 @@ homeownership_reg <- feols(
 summary(homeownership_reg)
 
 
-## ----Run OLS Regression: Homeownership Rate*, echo=FALSE-------------------------------------------------------------------------------------------------------------------------------------
+## ----Run OLS Regression: Homeownership Rate*, echo=FALSE-------------------------------------------------------------------------------------------------------
 # ✅ Run OLS Regression: Homeownership Rate
 reg_homeownership <- feols(
   homeownership_rate ~ post * (black_pct + latino_pct + asian_pct) +
@@ -573,7 +590,7 @@ reg_homeownership <- feols(
 summary(reg_homeownership)
 
 
-## ----Run OLS Regression: rent burden Rate*, echo=FALSE---------------------------------------------------------------------------------------------------------------------------------------
+## ----Run OLS Regression: rent burden Rate*, echo=FALSE---------------------------------------------------------------------------------------------------------
 # Run OLS Regression: Rent Burden
 reg_rent_burden <- feols(
   rent_burden_pct ~ post * (black_pct + latino_pct + asian_pct) +
@@ -584,7 +601,7 @@ reg_rent_burden <- feols(
 summary(reg_rent_burden)
 
 
-## ----Run OLS Regression: median income*, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------------
+## ----Run OLS Regression: median income*, echo=FALSE------------------------------------------------------------------------------------------------------------
 # ✅ Run OLS Regression: Median Income
 reg_median_income <- feols(
   median_income ~ post * (black_pct + latino_pct + asian_pct) +
