@@ -1,6 +1,6 @@
 # Load and install required packages
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis, ggplot2, dplyr, scales)
+pacman::p_load(tidycensus, tidyverse, sf, tigris, tmap, viridis, ggplot2, dplyr, tidyr, scales)
 
 # API Key
 census_api_key("4a1ebc849fc0b8c6eb495412532ce5918841de8b", overwrite = TRUE)
@@ -292,9 +292,6 @@ ggplot(homeownership_summary, aes(x = race_group, y = homeownership_rate, fill =
 
 
 ## ----la map file*, echo=FALSE----------------------------------------------------------------------------------------------------------------------------------
-# Load libraries
-library(tigris)
-library(sf)
 
 # Get LA County census tracts shapefile
 la_map_data <- tracts(state = "CA", county = "Los Angeles", year = 2020, class = "sf")
@@ -339,9 +336,6 @@ ggplot(la_map_data) +
 
 
 ## ----la map Rent Burden in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------------------
-library(dplyr)
-library(ggplot2)
-library(sf)
 
 # Assign periods with explicit ordering
 la_acs_compare <- la_acs_compare %>%
@@ -368,9 +362,6 @@ ggplot(la_map_data) +
   )
 
 ## ----la map Median Household Income in Los Angeles (2013-2018 vs. 2018-2022)*, echo=FALSE----------------------------------------------------------------------
-library(dplyr)
-library(ggplot2)
-library(sf)
 
 # Assign periods with explicit ordering
 la_acs_compare <- la_acs_compare %>%
@@ -435,11 +426,6 @@ ggplot(la_acs_long, aes(x = race_group, y = median_income, fill = post)) +
 # Compute total population explicitly
 la_acs_compare <- la_acs_compare %>%
   mutate(total_population = white_pop + black_pop + latino_pop + asian_pop)
-
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
-library(tidyr)
 
 # Compute total population explicitly
 la_acs_compare <- la_acs_compare %>%
