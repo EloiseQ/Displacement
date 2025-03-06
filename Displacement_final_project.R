@@ -1,6 +1,6 @@
 # Load and install required packages
 if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
-pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis, ggplot2, dplyr)
+pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis, ggplot2, dplyr, scales)
 
 # API Key
 census_api_key("4a1ebc849fc0b8c6eb495412532ce5918841de8b", overwrite = TRUE)
@@ -29,24 +29,25 @@ la_acs_2018 <- get_acs(
 )
 
 la_acs_2018_wide <- la_acs_2018 %>%
-  pivot_wider(names_from = variable, values_from = estimate) %>%
-  group_by(GEOID, NAME) %>%
+  pivot_wider(names_from = variable, values_from = estimate) %>%  # Convert from long to wide format
+  group_by(GEOID, NAME) %>%   # Group by census tract
   summarise(across(everything(), ~ first(na.omit(.)), .names = "clean_{.col}"), .groups = "drop")
 
-# rename
+# Rename columns to descriptive names and add a year column
 la_acs_2018_wide <- la_acs_2018_wide %>%
   rename(
-    total_renters = clean_B25070_001,
-    extreme_rent_burden = clean_B25070_007,
-    owner_occupied = clean_B25003_002,
-    renter_occupied = clean_B25003_003,
-    median_income = clean_B19013_001,
-    white_pop = clean_B03002_003,
-    black_pop = clean_B03002_004,
-    asian_pop = clean_B03002_006,
-    latino_pop = clean_B03002_012
+    total_renters = clean_B25070_001,      # Total renter households
+    extreme_rent_burden = clean_B25070_007,  # Extreme rent burden households
+    owner_occupied = clean_B25003_002,       # Owner-occupied units
+    renter_occupied = clean_B25003_003,      # Renter-occupied units
+    median_income = clean_B19013_001,        # Median household income
+    white_pop = clean_B03002_003,            # White population
+    black_pop = clean_B03002_004,            # Black population
+    asian_pop = clean_B03002_006,            # Asian population
+    latino_pop = clean_B03002_012            # Latino population
   ) %>%
-  mutate(year = 2018)  
+  mutate(year = 2018)                     
+
 
 # Get 2018-2022 (Post-Covid) Data
 la_acs_2022 <- get_acs(
@@ -110,9 +111,6 @@ race_population_summary <- la_acs_lai_merged %>%
 # Print results
 print(race_population_summary)
 
-## ----covid vs income group data, echo=FALSE--------------------------------------------------------------------------------------------------------------------
-library(dplyr)
-library(ggplot2)
 
 # Ensure post-COVID period is correctly labeled
 la_acs_lai_merged <- la_acs_lai_merged %>%
@@ -142,7 +140,6 @@ print(income_population_summary)
 
 
 ## ----Total Population by Income Group (Pre vs. Post COVID-19), echo=FALSE--------------------------------------------------------------------------------------
-library(scales)  # For formatting numbers with commas
 
 # Ensure post-COVID period is correctly labeled
 la_acs_lai_merged <- la_acs_lai_merged %>%
@@ -219,13 +216,15 @@ rent_burden_summary <- la_acs_lai_merged %>%
 # Print results
 print(rent_burden_summary)
 
-## ----plot: Rent Burden Population & Rate by Income Group (Pre & Post COVID)*, echo=FALSE-----------------------------------------------------------------------
-# Plot rent burden rate by income group with pre vs. post COVID comparison
+# Plot: Rent Burden Rate by Income Group (Pre & Post COVID)
+# Order the 'post' variable so that Pre-COVID appears first (left) and Post-COVID second (right)
+rent_burden_summary$post <- factor(rent_burden_summary$post, levels = c("Pre-COVID (2018)", "Post-COVID (2022)"))
+
 ggplot(rent_burden_summary, aes(x = income_group, y = rent_burden_rate, fill = post)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   geom_text(aes(label = round(rent_burden_rate, 1)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 4) +
-  scale_fill_manual(values = c("Pre-COVID (2018)" = "steelblue", "Post-COVID (2022)" = "darkred")) +
+  scale_fill_manual(values = c("Pre-COVID (2018)" = "cornflowerblue", "Post-COVID (2022)" = "red2")) +
   labs(title = "Rent Burden Rate by Income Group (Pre vs. Post COVID)",
        x = "Income Group",
        y = "Rent Burden Rate (%)",
@@ -233,7 +232,6 @@ ggplot(rent_burden_summary, aes(x = income_group, y = rent_burden_rate, fill = p
   theme_minimal() +
   theme(text = element_text(size = 14), 
         axis.text.x = element_text(angle = 45, hjust = 1))
-
 
 ## ----summary:homeownership*, echo=FALSE------------------------------------------------------------------------------------------------------------------------
 
@@ -265,7 +263,11 @@ homeownership_summary <- la_acs_lai_merged %>%
 # Print results
 print(homeownership_summary)
 
-## ----plot:homeownership*, echo=FALSE---------------------------------------------------------------------------------------------------------------------------
+# Plot: Home Ownership Rate by Income Group (Pre & Post COVID)
+# Order the 'post' variable so that Pre-COVID is left and Post-COVID is right
+homeownership_summary$post <- factor(homeownership_summary$post, 
+                                     levels = c("Pre-COVID (2018)", "Post-COVID (2022)"))
+
 # Ensure the dataset is correctly structured and filter out any NA, NaN, or "Other"
 homeownership_summary <- homeownership_summary %>%
   filter(!is.na(homeownership_rate) & !is.nan(homeownership_rate) & race_group != "Other")
@@ -275,7 +277,7 @@ ggplot(homeownership_summary, aes(x = race_group, y = homeownership_rate, fill =
   geom_bar(stat = "identity", position = "dodge") +  # Side-by-side bars
   geom_text(aes(label = round(homeownership_rate, 1)),  # Add text labels
             position = position_dodge(width = 0.9), vjust = -0.5, size = 4) +
-  scale_fill_manual(values = c("Pre-COVID (2018)" = "steelblue", "Post-COVID (2022)" = "darkred")) +
+  scale_fill_manual(values = c("Pre-COVID (2018)" = "cornflowerblue", "Post-COVID (2022)" = "red2")) +
   labs(
     title = "Homeownership Rate by Race Group (Pre vs. Post COVID)",
     x = "Race Group",
