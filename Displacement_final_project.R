@@ -1,21 +1,7 @@
 ## ----setup, echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------
-install.packages("tidycensus")   
-install.packages("tidyverse") 
-install.packages("sf")        
-
-library(tidycensus)
-library(tidyverse)
-library(sf)
-
-
-## ----install tmap,echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------
-install.packages("tmap") 
-install.packages("viridis") 
-
-
-## ----load tmape, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------
-library(tmap)
-library(viridis)
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+# Load and install required packages
+pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis)
 
 ## ----get data, echo=FALSE--------------------------------------------------------------------------------------------------------------------------------------
 # API
