@@ -1,25 +1,24 @@
-## ----setup, echo=FALSE-----------------------------------------------------------------------------------------------------------------------------------------
-if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
 # Load and install required packages
-pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis)
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+pacman::p_load(tidycensus, tidyverse, sf, tmap, viridis, ggplot2, dplyr)
 
-## ----get data, echo=FALSE--------------------------------------------------------------------------------------------------------------------------------------
-# API
+# API Key
 census_api_key("4a1ebc849fc0b8c6eb495412532ce5918841de8b", overwrite = TRUE)
 
-# variable
+# Variables needed for analysis
 acs_vars <- c(
-  "B25070_001E",  
-  "B25070_007E",  
-  "B25003_002E", 
-  "B25003_003E",  
-  "B19013_001E",  
-  "B03002_003E",  # white
-  "B03002_004E",  # African
-  "B03002_006E",  # asian
-  "B03002_012E"   # latino
+  "B25070_001E",  # Total number of renter households
+  "B25070_007E",  # Number of households experiencing an extreme rent burden (spending 50%+ of income on rent)
+  "B25003_002E",  # Number of owner-occupied housing units
+  "B25003_003E",  # Number of renter-occupied housing units
+  "B19013_001E",  # Median household income
+  "B03002_003E",  # White population
+  "B03002_004E",  # African American population
+  "B03002_006E",  # Asian population
+  "B03002_012E"   # Latino/Hispanic population
 )
-#  2014-2018data
+
+# Get 2014-2018 (Pre-Covid) data
 la_acs_2018 <- get_acs(
   geography = "tract",
   variables = acs_vars,
@@ -28,6 +27,7 @@ la_acs_2018 <- get_acs(
   county = "Los Angeles County",
   survey = "acs5"
 )
+
 la_acs_2018_wide <- la_acs_2018 %>%
   pivot_wider(names_from = variable, values_from = estimate) %>%
   group_by(GEOID, NAME) %>%
@@ -47,7 +47,8 @@ la_acs_2018_wide <- la_acs_2018_wide %>%
     latino_pop = clean_B03002_012
   ) %>%
   mutate(year = 2018)  
-  # 2018-2022
+
+# Get 2018-2022 (Post-Covid) Data
 la_acs_2022 <- get_acs(
   geography = "tract",
   variables = acs_vars,
@@ -62,7 +63,6 @@ la_acs_2022_wide <- la_acs_2022 %>%
   group_by(GEOID, NAME) %>%
   summarise(across(everything(), ~ first(na.omit(.)), .names = "clean_{.col}"), .groups = "drop")
 
-# rename variable
 la_acs_2022_wide <- la_acs_2022_wide %>%
   rename(
     total_renters = clean_B25070_001,
@@ -78,8 +78,7 @@ la_acs_2022_wide <- la_acs_2022_wide %>%
   mutate(year = 2022)  
 
 
-## ----merge data, echo=FALSE------------------------------------------------------------------------------------------------------------------------------------
-# merge
+# Merge pre and post Covid Data
 la_acs_compare <- bind_rows(la_acs_2018_wide, la_acs_2022_wide)
 
 la_acs_compare <- la_acs_compare %>%
@@ -89,10 +88,7 @@ la_acs_compare <- la_acs_compare %>%
     renter_rate = (renter_occupied / (owner_occupied + renter_occupied)) * 100
   )
 
-
 ## ----population by race data, echo=FALSE-----------------------------------------------------------------------------------------------------------------------
-library(dplyr)
-library(ggplot2)
 
 # Ensure post-COVID period is correctly labeled
 la_acs_lai_merged <- la_acs_compare %>%
